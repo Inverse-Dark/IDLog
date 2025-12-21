@@ -105,6 +105,11 @@ namespace IDLog
 			/// @return 转义后的字符串
 			static std::string Escape(const std::string &str);
 
+			/// @brief 反转义字符串中的特殊字符
+			/// @param str [IN] 待反转义的字符串
+			/// @return 反转义后的字符串
+			static std::string Unescape(const std::string &str);
+
 			/// @brief 检查字符串是否包含指定子串
 			/// @param str [IN] 待检查字符串
 			/// @param substr [IN] 指定子串

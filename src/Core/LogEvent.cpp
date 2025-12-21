@@ -50,13 +50,14 @@ namespace IDLog
 		}
 	};
 
-	LogEvent::LogEvent(LogLevel level, const std::string& loggerName, const SourceLocation& location)
+	LogEvent::LogEvent(LogLevel level, const std::string& loggerName, const std::string& message, const SourceLocation& location)
 		: m_pImpl(new Impl)
 	{
 		m_pImpl->level = level;
 		m_pImpl->loggerName = loggerName;
 		m_pImpl->location = location;
 		m_pImpl->time = std::chrono::system_clock::now();
+		m_pImpl->message = message;
 		m_pImpl->threadId = Utils::ThreadUtil::GetThreadId();
 		m_pImpl->threadName = Utils::ThreadUtil::GetThreadName();
 	}

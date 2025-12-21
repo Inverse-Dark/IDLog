@@ -42,6 +42,10 @@ namespace IDLog
 		/// @return 格式化器智能指针
 		virtual FormatterPtr GetFormatter() const;
 
+		/// @brief 获取格式化器（无锁版本）
+		/// @return 格式化器智能指针
+		virtual FormatterPtr GetFormatterNoLock() const;
+
 		/// @brief 获取输出器名称
 		/// @return 输出器名称
 		virtual std::string GetName() const = 0;

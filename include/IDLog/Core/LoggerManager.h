@@ -25,10 +25,28 @@ namespace IDLog
 		/// @return 日志管理器实例引用
 		static LoggerManager &GetInstance();
 
+		/// @brief 拷贝构造函数(禁用)
+		/// @param [IN] 另一个LoggerManager对象
+		LoggerManager(const LoggerManager &) = delete;
+		/// @brief 拷贝赋值运算符(禁用)
+		/// @param [IN] 另一个LoggerManager对象
+		/// @return 当前LoggerManager对象的引用
+		LoggerManager &operator=(const LoggerManager &) = delete;
+
 		/// @brief 获取或创建日志器
 		/// @param name [IN] 日志器名称
 		/// @return 日志器智能指针
 		LoggerPtr GetLogger(const std::string &name);
+
+		/// @brief 添加日志器
+		/// @param name [IN] 日志器名称
+		/// @param logger [IN] 日志器智能指针
+		void AddLogger(const std::string &name, const LoggerPtr &logger);
+
+		/// @brief 检查是否存在指定名称的日志器
+		/// @param name [IN] 日志器名称
+		/// @return 存在返回true，否则返回false
+		bool HasLogger(const std::string &name);
 
 		/// @brief 设置指定名称日志器的级别
 		/// @param name [IN] 日志器名称
@@ -49,14 +67,6 @@ namespace IDLog
 
 		/// @brief 清空所有日志器
 		void Clear();
-
-		/// @brief 拷贝构造函数(禁用)
-		/// @param [IN] 另一个LoggerManager对象
-		LoggerManager(const LoggerManager &) = delete;
-		/// @brief 拷贝赋值运算符(禁用)
-		/// @param [IN] 另一个LoggerManager对象
-		/// @return 当前LoggerManager对象的引用
-		LoggerManager &operator=(const LoggerManager &) = delete;
 
 	private:
 		/// @brief 构造函数

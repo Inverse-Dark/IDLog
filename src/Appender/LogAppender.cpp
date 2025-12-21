@@ -40,4 +40,9 @@ namespace IDLog
 		return m_pImpl->formatter;
 	}
 
+	LogAppender::FormatterPtr LogAppender::GetFormatterNoLock() const
+	{
+		return m_pImpl->formatter;
+	}
+
 } // namespace IDLog

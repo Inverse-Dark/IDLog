@@ -125,8 +125,7 @@ namespace IDLog
 		}
 
 		// 创建日志事件
-		LogEventPtr event = std::make_shared<LogEvent>(level, GetName(), location);
-		event->SetLogMessage(message);
+		LogEventPtr event = std::make_shared<LogEvent>(level, GetName(), message, location);
 
 		// 应用过滤器
 		FilterDecision decision = ApplyFilters(event);

@@ -35,9 +35,12 @@ namespace IDLog
 			return;
 		}
 
+		// 线程安全输出
+		std::lock_guard<std::mutex> lock(m_mutex);
+
 		// 格式化日志消息
 		std::string formattedMessage;
-		if (auto formatter = GetFormatter())
+		if (auto formatter = GetFormatterNoLock())
 		{
 			formattedMessage = formatter->Format(event);
 		}
@@ -45,9 +48,6 @@ namespace IDLog
 		{
 			formattedMessage = event->GetLogMessage();
 		}
-
-		// 线程安全输出
-		std::lock_guard<std::mutex> lock(m_mutex);
 
 		// 添加颜色
 		if (m_useColor)

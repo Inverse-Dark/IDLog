@@ -72,6 +72,18 @@ namespace IDLog
 		return newLogger;
 	}
 
+	void LoggerManager::AddLogger(const std::string &name, const LoggerPtr &logger)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_pImpl->m_loggers[name] = logger;
+	}
+
+	bool LoggerManager::HasLogger(const std::string &name)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		return m_pImpl->m_loggers.find(name) != m_pImpl->m_loggers.end();
+	}
+
 	void LoggerManager::SetLoggerLevel(const std::string &name, LogLevel level)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);

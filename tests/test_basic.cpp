@@ -8,8 +8,8 @@
 #include "IDLog/IDLog.h"
 
 #include <iostream>
-#include <functional>
 #include <Windows.h>
+#include <fstream>
 
 void TestLogLevel()
 {
@@ -36,8 +36,7 @@ void TestLogEvent()
 	std::cout << "=== 测试日志事件 ===" << std::endl;
 
 	IDLog::SourceLocation loc(__FILE__, __FUNCTION__, __LINE__);
-	IDLog::LogEvent event(IDLog::LogLevel::INFO, "TestLogger", loc);
-	event.SetLogMessage("这是一个测试日志消息。");
+	IDLog::LogEvent event(IDLog::LogLevel::INFO, "TestLogger", "这是一个测试日志消息。", loc);
 
 	std::cout << "日志事件详情:" << std::endl;
 	std::cout << "级别: " << IDLog::LevelToString(event.GetLevel()) << std::endl;
@@ -272,6 +271,39 @@ void TestFilter()
 	
 }
 
+void TestFileAppender()
+{
+	std::cout << "=== 测试文件输出器 ===" << std::endl;
+
+	auto fileAppender = std::make_shared<IDLog::FileAppender>("test_log.log", nullptr,
+		IDLog::FileAppender::RollPolicy::SIZE, 5 * 1024); // 每分钟滚动，最大5KB
+
+	auto logger = IDLOG_GET_LOGGER("FileLogger");
+	logger->SetLevel(IDLog::LogLevel::TRACE);
+	logger->ClearAppenders();
+	logger->AddAppender(fileAppender);
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		logger->InfoFmt("这是第 %d 条日志消息，用于测试文件输出器和日志滚动功能。", i + 1);
+	}
+
+	std::cout << "文件输出器测试完成，日志已写入 test_log.log 文件。" << std::endl;
+
+    // 读取并显示文件内容
+    std::ifstream file("test_log.log");
+    if (file.is_open()) {
+        std::cout << "文件内容前几行:" << std::endl;
+        std::string line;
+        int count = 0;
+        while (std::getline(file, line) && count < 3) {
+            std::cout << "  " << line << std::endl;
+            count++;
+        }
+        file.close();
+    }
+}
+
 int main()
 {
 	std::cout << "InverseDarkLog(IDLog) " << IDLOG_VERSION_STRING << " 基础功能测试" << std::endl;
@@ -287,10 +319,12 @@ int main()
 		TestMultiThread();
 		TestColorOutput();
 		TestFilter();
+		TestFileAppender();
 	}
 	catch (const std::exception& ex)
 	{
 		std::cerr << "测试过程中发生异常: " << ex.what() << std::endl;
 		return -1;
 	}
+	return 0;
 }

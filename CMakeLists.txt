@@ -1,7 +1,7 @@
 # 设置最低的CMake版本要求
 cmake_minimum_required(VERSION 3.10)
 # 设置项目名称和版本号
-project(IDLog VERSION 1.0.0 LANGUAGES C CXX)
+project(IDLog VERSION 1.1.0 LANGUAGES C CXX)
 
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)	# 使用C++17标准
@@ -45,25 +45,26 @@ if(IDLOG_BUILD_SHARED AND IDLOG_BUILD_STATIC)
 	set(IDLOG_BUILD_STATIC OFF CACHE BOOL "Build IDLog as static library" FORCE)
 endif()
 
-# 编译选项
+# 编译选项 - 使用生成器表达式
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-	add_compile_options(-Wall -Wextra -Wpedantic -Werror -pthread)
-
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		add_compile_options(-g -O0 -DDEBUG -DIDLOG_BUILD_DEBUG)
-	else()
-		add_compile_options(-O2 -DNDEBUG -DIDLOG_BUILD_RELEASE)
-	endif()
-
+    # 公共选项
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror -pthread)
+    
+    # 不同构建类型的选项
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG -DIDLOG_BUILD_DEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -DIDLOG_BUILD_RELEASE")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG -DIDLOG_BUILD_RELEASE")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG -DIDLOG_BUILD_RELEASE")
+    
 elseif(MSVC)
-	add_compile_options(/WX /MP)
-
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		add_compile_options(/Zi /Od /DDEBUG /DIDLOG_BUILD_DEBUG)
-	else()
-		add_compile_options(/O2 /DNDEBUG /DIDLOG_BUILD_RELEASE)
-	endif()
-
+    # 公共选项
+    add_compile_options(/WX /MP /utf-8)
+        
+    # 不同构建类型的选项
+    set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Zi /Od /DDEBUG /DIDLOG_BUILD_DEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /DNDEBUG /DIDLOG_BUILD_RELEASE")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Zi /DNDEBUG /DIDLOG_BUILD_RELEASE")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "/MD /O1 /DNDEBUG /DIDLOG_BUILD_RELEASE")
 endif()
 
 # 添加子目录

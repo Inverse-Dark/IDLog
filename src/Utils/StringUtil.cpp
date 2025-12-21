@@ -168,6 +168,59 @@ namespace IDLog
 			return result;
 		}
 
+		std::string StringUtil::Unescape(const std::string &str)
+		{
+			std::string result;
+			result.reserve(str.length());
+
+			for (size_t i = 0; i < str.length(); ++i)
+			{
+				if (str[i] == '\\' && i + 1 < str.length())
+				{
+					switch (str[i + 1])
+					{
+					case '\"':
+						result += '\"';
+						i++;
+						break;
+					case '\\':
+						result += '\\';
+						i++;
+						break;
+					case 'b':
+						result += '\b';
+						i++;
+						break;
+					case 'f':
+						result += '\f';
+						i++;
+						break;
+					case 'n':
+						result += '\n';
+						i++;
+						break;
+					case 'r':
+						result += '\r';
+						i++;
+						break;
+					case 't':
+						result += '\t';
+						i++;
+						break;
+					default:
+						result += str[i];
+						break;
+					}
+				}
+				else
+				{
+					result += str[i];
+				}
+			}
+
+			return result;
+		}
+
 		bool StringUtil::Contains(const std::string &str, const std::string &substr)
 		{
 			return str.find(substr) != std::string::npos;

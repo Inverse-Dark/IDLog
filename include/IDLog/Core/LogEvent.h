@@ -58,8 +58,9 @@ namespace IDLog
 		/// @brief 构造函数
 		/// @param level [IN] 日志级别
 		/// @param loggerName [IN] 日志器名称
+		/// @param message [IN] 日志消息
 		/// @param location [IN] 源文件位置
-		LogEvent(LogLevel level, const std::string &loggerName, const SourceLocation &location = SourceLocation());
+		LogEvent(LogLevel level, const std::string &loggerName, const std::string& message = "", const SourceLocation &location = SourceLocation());
 
 		/// @brief 析构函数
 		~LogEvent();
