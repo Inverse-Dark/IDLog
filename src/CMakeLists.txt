@@ -84,9 +84,9 @@ endif()
 # 使用生成器表达式安装不同配置的库
 install(TARGETS ${LIBRARY_NAME}
 		EXPORT ${LIBRARY_NAME}Targets
-        RUNTIME DESTINATION bin/$<CONFIG>
-        LIBRARY DESTINATION lib/$<CONFIG>
-        ARCHIVE DESTINATION lib/$<CONFIG>
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
 	)
 
 # 创建别名
