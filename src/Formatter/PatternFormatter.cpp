@@ -110,8 +110,30 @@ namespace IDLog
 
 			void Format(const LogEventPtr &event, std::ostream &os) override
 			{
-				if (event)
-					os << m_options.Apply(event->GetFormattedTime(m_format));
+				if (!event)
+					return;
+
+				// 缓存上次格式化结果，避免重复计算
+				static thread_local time_t t_lastSecond = 0;
+				static thread_local char t_timeCache[64] = {0};
+				static thread_local std::string t_lastFormat;
+
+				auto timePoint = event->GetTime();
+				time_t currentSecond = std::chrono::system_clock::to_time_t(timePoint);
+				if (currentSecond != t_lastSecond || m_format != t_lastFormat)
+				{
+					t_lastSecond = currentSecond;
+					t_lastFormat = m_format;
+					std::tm tm;
+#ifdef IDLOG_PLATFORM_WINDOWS
+					localtime_s(&tm, &currentSecond);
+#else
+					localtime_r(&currentSecond, &tm);
+#endif
+					std::strftime(t_timeCache, sizeof(t_timeCache), m_format.c_str(), &tm);
+				}
+
+				os << m_options.Apply(t_timeCache);
 			}
 
 		private:
@@ -127,9 +149,23 @@ namespace IDLog
 				if (event)
 				{
 					int ms = event->GetMilliseconds();
-					std::stringstream ss;
-					ss << std::setfill('0') << std::setw(3) << ms;
-					os << m_options.Apply(ss.str());
+
+					// 格式化为三位数
+					char buf[4];
+
+					// 确保ms在0-999范围内
+					if (ms < 0)
+						ms = 0;
+					if (ms > 999)
+						ms = 999;
+
+					// 格式化为三位数字符串
+					buf[0] = (ms / 100) + '0';
+					buf[1] = ((ms / 10) % 10) + '0';
+					buf[2] = (ms % 10) + '0';
+					buf[3] = '\0';
+
+					os << m_options.Apply(buf);
 				}
 			}
 		};
@@ -221,14 +257,14 @@ namespace IDLog
 	/// @brief 模式格式化器实现结构体
 	struct PatternFormatter::Impl
 	{
-		std::string m_pattern;					   ///< 模式字符串
-		std::vector<PatternItem::Pointer> m_items; ///< 解析后的格式化项列表
+		std::string pattern;					   ///< 模式字符串
+		std::vector<PatternItem::Pointer> items; ///< 解析后的格式化项列表
 	};
 
 	PatternFormatter::PatternFormatter(const std::string &pattern)
 		: m_pImpl(new Impl)
 	{
-		m_pImpl->m_pattern = pattern;
+		m_pImpl->pattern = pattern;
 		// 解析模式字符串
 		ParsePattern();
 	}
@@ -246,7 +282,7 @@ namespace IDLog
 	std::string PatternFormatter::Format(const LogEventPtr &event)
 	{
 		std::stringstream ss;
-		for (const auto &item : m_pImpl->m_items)
+		for (const auto &item : m_pImpl->items)
 		{
 			item->Format(event, ss);
 		}
@@ -255,44 +291,44 @@ namespace IDLog
 
 	PatternFormatter::Pointer PatternFormatter::Clone() const
 	{
-		return std::make_shared<PatternFormatter>(m_pImpl->m_pattern);
+		return std::make_shared<PatternFormatter>(m_pImpl->pattern);
 	}
 
 	const std::string &PatternFormatter::GetPattern() const
 	{
-		return m_pImpl->m_pattern;
+		return m_pImpl->pattern;
 	}
 
 	void PatternFormatter::SetPattern(const std::string &pattern)
 	{
-		m_pImpl->m_pattern = pattern;
+		m_pImpl->pattern = pattern;
 		ParsePattern();
 	}
 
 	void PatternFormatter::ParsePattern()
 	{
 		// 清空已有项
-		m_pImpl->m_items.clear();
+		m_pImpl->items.clear();
 
 		size_t pos = 0;									// 当前解析位置
-		const size_t len = m_pImpl->m_pattern.length(); // 模式字符串长度
+		const size_t len = m_pImpl->pattern.length(); // 模式字符串长度
 
 		// 解析循环
 		while (pos < len)
 		{
 			// 处理转义字符
-			if (m_pImpl->m_pattern[pos] == '%')
+			if (m_pImpl->pattern[pos] == '%')
 			{
 				if (pos + 1 >= len)
 				{
 					// 单独的 '%'，作为字面文本处理
-					m_pImpl->m_items.push_back(std::make_shared<LiteralItem>("%"));
+					m_pImpl->items.push_back(std::make_shared<LiteralItem>("%"));
 					break;
 				}
 
 				// 解析格式化选项
 				FormatOptions options;
-				char next = m_pImpl->m_pattern[++pos];
+				char next = m_pImpl->pattern[++pos];
 
 				// 处理对齐和宽度
 				if (next == '-')
@@ -300,22 +336,22 @@ namespace IDLog
 					options.leftAlign = true;
 					if (pos + 1 >= len)
 						break;
-					next = m_pImpl->m_pattern[++pos];
+					next = m_pImpl->pattern[++pos];
 				}
 
 				// 检查是否有宽度数字
 				if (std::isdigit(next))
 				{
 					std::string widthStr;
-					while (pos < len && std::isdigit(m_pImpl->m_pattern[pos]))
+					while (pos < len && std::isdigit(m_pImpl->pattern[pos]))
 					{
-						widthStr.push_back(m_pImpl->m_pattern[pos++]);
+						widthStr.push_back(m_pImpl->pattern[pos++]);
 					}
 					options.width = std::stoi(widthStr);
 
 					if (pos >= len)
 						break;
-					next = m_pImpl->m_pattern[pos];
+					next = m_pImpl->pattern[pos];
 				}
 
 				// 根据格式字符创建对应的模式项
@@ -325,13 +361,13 @@ namespace IDLog
 				case 'd':
 				{
 					// 日期时间
-					if (pos + 1 < len && m_pImpl->m_pattern[pos + 1] == '{')
+					if (pos + 1 < len && m_pImpl->pattern[pos + 1] == '{')
 					{
 						// 提取日期格式
-						size_t endBrace = m_pImpl->m_pattern.find('}', pos + 2);
+						size_t endBrace = m_pImpl->pattern.find('}', pos + 2);
 						if (endBrace != std::string::npos)
 						{
-							std::string dateFormat = m_pImpl->m_pattern.substr(pos + 2, endBrace - (pos + 2));
+							std::string dateFormat = m_pImpl->pattern.substr(pos + 2, endBrace - (pos + 2));
 							auto datetimeItem = std::make_shared<DateTimeItem>(dateFormat);
 							datetimeItem->SetOptions(options);
 							item = datetimeItem;
@@ -358,7 +394,7 @@ namespace IDLog
 				case 'm':
 				{
 					// 消息或毫秒
-					if (pos + 1 < len && m_pImpl->m_pattern[pos + 1] == 's')
+					if (pos + 1 < len && m_pImpl->pattern[pos + 1] == 's')
 					{
 						auto msItem = std::make_shared<MillisecondsItem>();
 						msItem->SetOptions(options);
@@ -478,21 +514,21 @@ namespace IDLog
 
 				if (item)
 				{
-					m_pImpl->m_items.push_back(item);
+					m_pImpl->items.push_back(item);
 				}
 			}
 			else
 			{
 				// 处理字面文本
 				size_t start = pos;
-				while (pos < len && m_pImpl->m_pattern[pos] != '%')
+				while (pos < len && m_pImpl->pattern[pos] != '%')
 				{
 					pos++;
 				}
-				std::string literalText = m_pImpl->m_pattern.substr(start, pos - start);
+				std::string literalText = m_pImpl->pattern.substr(start, pos - start);
 				if (!literalText.empty())
 				{
-					m_pImpl->m_items.push_back(std::make_shared<LiteralItem>(literalText));
+					m_pImpl->items.push_back(std::make_shared<LiteralItem>(literalText));
 				}
 			}
 		}

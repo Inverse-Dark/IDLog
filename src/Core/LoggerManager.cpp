@@ -14,16 +14,16 @@ namespace IDLog
 	/// @brief 日志管理器实现结构体
 	struct LoggerManager::Impl
 	{
-		LoggerPtr m_rootLogger;								  ///< 根日志器
-		std::unordered_map<std::string, LoggerPtr> m_loggers; ///< 日志器映射表
+		LoggerPtr rootLogger;								///< 根日志器
+		std::unordered_map<std::string, LoggerPtr> loggers; ///< 日志器映射表
 	};
 
 	LoggerManager::LoggerManager()
 		: m_pImpl(new Impl)
 	{
 		// 创建根日志器
-		m_pImpl->m_rootLogger = std::make_shared<Logger>("ROOT");
-		m_pImpl->m_loggers["ROOT"] = m_pImpl->m_rootLogger;
+		m_pImpl->rootLogger = std::make_shared<Logger>("ROOT");
+		m_pImpl->loggers["ROOT"] = m_pImpl->rootLogger;
 	}
 
 	LoggerManager::~LoggerManager()
@@ -42,8 +42,8 @@ namespace IDLog
 		std::lock_guard<std::mutex> lock(m_mutex);
 
 		// 查找已有的日志器
-		auto it = m_pImpl->m_loggers.find(name);
-		if (it != m_pImpl->m_loggers.end())
+		auto it = m_pImpl->loggers.find(name);
+		if (it != m_pImpl->loggers.end())
 		{
 			return it->second;
 		}
@@ -56,8 +56,8 @@ namespace IDLog
 		if (pos != std::string::npos)
 		{
 			std::string parentName = name.substr(0, pos);
-			auto parentIt = m_pImpl->m_loggers.find(parentName);
-			if (parentIt != m_pImpl->m_loggers.end())
+			auto parentIt = m_pImpl->loggers.find(parentName);
+			if (parentIt != m_pImpl->loggers.end())
 			{
 				newLogger->SetLevel(parentIt->second->GetLevel());
 			}
@@ -65,30 +65,30 @@ namespace IDLog
 		else
 		{
 			// 没有父级，继承根日志器级别
-			newLogger->SetLevel(m_pImpl->m_rootLogger->GetLevel());
+			newLogger->SetLevel(m_pImpl->rootLogger->GetLevel());
 		}
 		// 存储新日志器
-		m_pImpl->m_loggers[name] = newLogger;
+		m_pImpl->loggers[name] = newLogger;
 		return newLogger;
 	}
 
 	void LoggerManager::AddLogger(const std::string &name, const LoggerPtr &logger)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		m_pImpl->m_loggers[name] = logger;
+		m_pImpl->loggers[name] = logger;
 	}
 
 	bool LoggerManager::HasLogger(const std::string &name)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return m_pImpl->m_loggers.find(name) != m_pImpl->m_loggers.end();
+		return m_pImpl->loggers.find(name) != m_pImpl->loggers.end();
 	}
 
 	void LoggerManager::SetLoggerLevel(const std::string &name, LogLevel level)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		auto it = m_pImpl->m_loggers.find(name);
-		if (it != m_pImpl->m_loggers.end())
+		auto it = m_pImpl->loggers.find(name);
+		if (it != m_pImpl->loggers.end())
 		{
 			it->second->SetLevel(level);
 		}
@@ -97,31 +97,49 @@ namespace IDLog
 	void LoggerManager::RemoveLogger(const std::string &name)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		m_pImpl->m_loggers.erase(name);
+		m_pImpl->loggers.erase(name);
 	}
 
 	LoggerManager::LoggerPtr LoggerManager::GetRootLogger()
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return m_pImpl->m_rootLogger;
+		return m_pImpl->rootLogger;
 	}
 
 	void LoggerManager::SetRootLevel(LogLevel level)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		if (m_pImpl->m_rootLogger)
+		if (m_pImpl->rootLogger)
 		{
-			m_pImpl->m_rootLogger->SetLevel(level);
+			m_pImpl->rootLogger->SetLevel(level);
 		}
 	}
 
 	void LoggerManager::Clear()
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		m_pImpl->m_loggers.clear();
+		m_pImpl->loggers.clear();
 		// 重新创建根日志器
-		m_pImpl->m_rootLogger = std::make_shared<Logger>("ROOT");
-		m_pImpl->m_loggers["ROOT"] = m_pImpl->m_rootLogger;
+		m_pImpl->rootLogger = std::make_shared<Logger>("ROOT");
+		m_pImpl->loggers["ROOT"] = m_pImpl->rootLogger;
+	}
+
+	void LoggerManager::Shutdown()
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		// 关闭所有普通 Logger
+		for (auto &pair : m_pImpl->loggers)
+		{
+			pair.second->ClearAppenders();
+		}
+		m_pImpl->loggers.clear();
+
+		// 关闭 RootLogger
+		if (m_pImpl->rootLogger)
+		{
+			m_pImpl->rootLogger->ClearAppenders();
+		}
 	}
 
 } // namespace IDLog

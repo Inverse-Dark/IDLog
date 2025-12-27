@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <functional>
+#include <map>
 
 namespace IDLog
 {
@@ -79,6 +80,15 @@ namespace IDLog
 								  const std::string &key,
 								  const std::string &defaultValue = "") const;
 
+			/// @brief 从参数映射中获取字符串值
+			/// @param params [IN] 参数映射
+			/// @param key [IN] 键名称
+			/// @param defaultValue [IN] 默认值（键不存在时返回该值）
+			/// @return 字符串值
+			static std::string GetString(const std::map<std::string, std::string> &params,
+									 const std::string &key,
+									 const std::string &defaultValue = "");
+
 			/// @brief 获取指定节下的整数值
 			/// @param section [IN] 节名称
 			/// @param key [IN] 键名称
@@ -87,6 +97,15 @@ namespace IDLog
 			int GetInt(const std::string &section,
 					   const std::string &key,
 					   int defaultValue = 0) const;
+
+			/// @brief 从参数映射中获取整数值
+			/// @param params [IN] 参数映射
+			/// @param key [IN] 键名称
+			/// @param defaultValue [IN] 默认值（键不存在时返回该值）
+			/// @return 整数值
+			static int GetInt(const std::map<std::string, std::string> &params,
+							  const std::string &key,
+							  int defaultValue = 0);
 
 			/// @brief 获取指定节下的浮点值
 			/// @param section [IN] 节名称
@@ -97,6 +116,15 @@ namespace IDLog
 							 const std::string &key,
 							 double defaultValue = 0.0) const;
 
+			/// @brief 从参数映射中获取浮点值
+			/// @param params [IN] 参数映射
+			/// @param key [IN] 键名称
+			/// @param defaultValue [IN] 默认值（键不存在时返回该值）
+			/// @return 浮点值
+			static double GetDouble(const std::map<std::string, std::string> &params,
+									const std::string &key,
+									double defaultValue = 0.0);
+
 			/// @brief 获取指定节下的布尔值
 			/// @param section [IN] 节名称
 			/// @param key [IN] 键名称
@@ -106,6 +134,15 @@ namespace IDLog
 						 const std::string &key,
 						 bool defaultValue = false) const;
 
+			/// @brief 从参数映射中获取布尔值
+			/// @param params [IN] 参数映射
+			/// @param key [IN] 键名称
+			/// @param defaultValue [IN] 默认值（键不存在时返回该值）
+			/// @return 布尔值
+			static bool GetBool(const std::map<std::string, std::string> &params,
+								const std::string &key,
+								bool defaultValue = false);
+
 			/// @brief 获取指定节下的日志级别值
 			/// @param section [IN] 节名称
 			/// @param key [IN] 键名称
@@ -114,6 +151,15 @@ namespace IDLog
 			LogLevel GetLogLevel(const std::string &section,
 								 const std::string &key,
 								 LogLevel defaultValue = LogLevel::INFO) const;
+
+			/// @brief 从参数映射中获取日志级别值
+			/// @param params [IN] 参数映射
+			/// @param key [IN] 键名称
+			/// @param defaultValue [IN] 默认值（键不存在时返回该值）
+			/// @return 日志级别值
+			static LogLevel GetLogLevel(const std::map<std::string, std::string> &params,
+										const std::string &key,
+										LogLevel defaultValue = LogLevel::INFO);
 
 			/// @brief 设置指定节下的字符串值
 			/// @param section [IN] 节名称

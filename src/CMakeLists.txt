@@ -1,6 +1,9 @@
 # 定义库的名称
 set(LIBRARY_NAME IDLog)
 
+# 查找线程库（可移植替代直接链接 pthread）
+find_package(Threads REQUIRED)
+
 # 收集所有源文件
 file(GLOB SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/Core/*.cpp
@@ -21,27 +24,10 @@ if(IDLOG_BUILD_SHARED)
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME ${LIBRARY_NAME}
-        DEFINE_SYMBOL "IDLOG_BUILD_SHARED"
+		DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}"
     )
-	# 添加宏定义
+	# 添加宏定义（目标级）
 	target_compile_definitions(${LIBRARY_NAME} PRIVATE IDLOG_BUILD_SHARED)
-	# 包含目录
-	target_include_directories(${LIBRARY_NAME}
-		PUBLIC
-			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-			$<INSTALL_INTERFACE:include>
-		PRIVATE
-			${CMAKE_CURRENT_SOURCE_DIR}
-	)
-	# 安装动态库
-	install(TARGETS ${LIBRARY_NAME}
-		EXPORT ${LIBRARY_NAME}Targets
-		LIBRARY DESTINATION lib
-		ARCHIVE DESTINATION lib
-		RUNTIME DESTINATION bin
-	)
-	# 创建别名
-	add_library(IDLog::IDLog ALIAS ${LIBRARY_NAME})
 elseif(IDLOG_BUILD_STATIC)
 	# 只构建静态库
 	message(STATUS "构建静态库")
@@ -52,15 +38,34 @@ elseif(IDLOG_BUILD_STATIC)
 		VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME ${LIBRARY_NAME}
-		DEFINE_SYMBOL "IDLOG_BUILD_STATIC"
+		DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}"
 	)
-	# 添加宏定义
-	target_compile_definitions(${LIBRARY_NAME} 
+	# 添加宏定义（目标级）
+	target_compile_definitions(${LIBRARY_NAME}
 		PRIVATE 
 			IDLOG_BUILD_STATIC
 		INTERFACE
 			IDLOG_STATIC_LIB
 	)
+endif()
+
+# 目标级别：导出版本宏并启用 C++ 标准特性与 PIC
+# 这些在库创建后统一设置
+if(TARGET ${LIBRARY_NAME})
+	# 版本宏（目标级）
+	target_compile_definitions(${LIBRARY_NAME} PRIVATE
+		IDLOG_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+		IDLOG_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+		IDLOG_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+		"IDLOG_VERSION_STRING=\"${PROJECT_VERSION}\""
+	)
+
+	# 要求 C++ 标准（现代 CMake 风格）
+	target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_17)
+
+	# 生成位置无关代码（适用于共享库和某些静态库场景）
+	set_target_properties(${LIBRARY_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 	# 包含目录
 	target_include_directories(${LIBRARY_NAME} 
 		PUBLIC
@@ -69,21 +74,20 @@ elseif(IDLOG_BUILD_STATIC)
 		PRIVATE
 			${CMAKE_CURRENT_SOURCE_DIR}
 	)
-	# 安装静态库
-	install(TARGETS ${LIBRARY_NAME}
-		EXPORT ${LIBRARY_NAME}Targets
-		ARCHIVE DESTINATION lib
-		LIBRARY DESTINATION lib
-		RUNTIME DESTINATION bin
-	)
-	# 创建别名
-	add_library(IDLog::IDLog ALIAS ${LIBRARY_NAME})
+
+	# 链接可移植的线程库
+	target_link_libraries(${LIBRARY_NAME} PUBLIC Threads::Threads)
+
+	# 其余公共设置保留（例如其他系统库可在此处添加）
 endif()
 
-# 设置库的属性(公共部分)
-if(TARGET ${LIBRARY_NAME})
-	# 链接系统库
-	if(UNIX AND NOT APPLE)
-		target_link_libraries(${LIBRARY_NAME} PUBLIC pthread)
-	endif()
-endif()
+# 使用生成器表达式安装不同配置的库
+install(TARGETS ${LIBRARY_NAME}
+		EXPORT ${LIBRARY_NAME}Targets
+        RUNTIME DESTINATION bin/$<CONFIG>
+        LIBRARY DESTINATION lib/$<CONFIG>
+        ARCHIVE DESTINATION lib/$<CONFIG>
+	)
+
+# 创建别名
+add_library(IDLog::IDLog ALIAS ${LIBRARY_NAME})

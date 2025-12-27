@@ -1,7 +1,7 @@
 # 设置最低的CMake版本要求
 cmake_minimum_required(VERSION 3.10)
 # 设置项目名称和版本号
-project(IDLog VERSION 1.1.0 LANGUAGES C CXX)
+project(IDLog VERSION 1.2.0 LANGUAGES C CXX)
 
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)	# 使用C++17标准
@@ -12,6 +12,13 @@ set(CMAKE_CXX_EXTENSIONS OFF) # 禁用编译器特定的扩展，确保标准兼
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# 设置调试库后缀（Windows 通常加 d，Unix 通常不加）
+if(WIN32)
+    set(CMAKE_DEBUG_POSTFIX "d")
+else()
+    set(CMAKE_DEBUG_POSTFIX "")  # Unix/Linux 通常不加后缀
+endif()
 
 # 添加版本宏定义
 add_definitions(-DIDLOG_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
@@ -82,6 +89,46 @@ option(IDLOG_BUILD_EXAMPLES "Build examples for IDLog" ON)
 if(IDLOG_BUILD_EXAMPLES)
 	add_subdirectory(examples)
 endif()
+
+# 安装配置文件
+include(CMakePackageConfigHelpers)
+
+# 创建包的配置文件
+configure_package_config_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/cmake/IDLogConfig.cmake.in	# 输入模板文件
+	${CMAKE_CURRENT_BINARY_DIR}/IDLogConfig.cmake		# 输出配置文件
+	INSTALL_DESTINATION lib/cmake/IDLog	# 安装路径
+	NO_SET_AND_CHECK_MACRO	# 不设置和检查宏
+	NO_CHECK_REQUIRED_COMPONENTS_MACRO	# 不检查必需组件
+)
+
+# 创建版本文件
+write_basic_package_version_file(
+	${CMAKE_CURRENT_BINARY_DIR}/IDLogConfigVersion.cmake	# 输出版本文件
+	VERSION ${PROJECT_VERSION}	# 版本号
+	COMPATIBILITY AnyNewerVersion	# 任何更新的版本都兼容
+)
+
+# 导出目标
+install(EXPORT IDLogTargets
+	FILE IDLogTargets.cmake
+	NAMESPACE IDLog::
+	DESTINATION lib/cmake/IDLog
+	CONFIGURATIONS Debug Release RelWithDebInfo MinSizeRel
+)
+
+# 安装配置文件
+install(FILES
+	${CMAKE_CURRENT_BINARY_DIR}/IDLogConfig.cmake
+	${CMAKE_CURRENT_BINARY_DIR}/IDLogConfigVersion.cmake
+	DESTINATION lib/cmake/IDLog
+)
+
+# 安装头文件
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/IDLog
+	DESTINATION include
+	FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl"
+)
 
 # 项目描述
 message(STATUS "项目名称: ${PROJECT_NAME}")	# 输出项目名称

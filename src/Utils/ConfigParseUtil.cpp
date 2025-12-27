@@ -157,6 +157,18 @@ namespace IDLog
 			return defaultValue;
 		}
 
+		std::string ConfigParseUtil::GetString(const std::map<std::string, std::string> &params,
+											 const std::string &key,
+											 const std::string &defaultValue)
+		{
+			auto it = params.find(key);
+			if (it != params.end())
+			{
+				return it->second;
+			}
+			return defaultValue;
+		}
+
 		int ConfigParseUtil::GetInt(const std::string &section,
 									   const std::string &key,
 									   int defaultValue) const
@@ -176,6 +188,25 @@ namespace IDLog
 			}
 		}
 
+		int ConfigParseUtil::GetInt(const std::map<std::string, std::string> &params,
+									  const std::string &key,
+									  int defaultValue)
+		{
+			auto it = params.find(key);
+			if (it != params.end())
+			{
+				try
+				{
+					return std::stoi(it->second);
+				}
+				catch (...)
+				{
+					return defaultValue;
+				}
+			}
+			return defaultValue;
+		}
+
 		double ConfigParseUtil::GetDouble(const std::string &section,
 										const std::string &key,
 										double defaultValue) const
@@ -193,6 +224,25 @@ namespace IDLog
 			{
 				return defaultValue;
 			}
+		}
+
+		double ConfigParseUtil::GetDouble(const std::map<std::string, std::string> &params,
+										const std::string &key,
+										double defaultValue)
+		{
+			auto it = params.find(key);
+			if (it != params.end())
+			{
+				try
+				{
+					return std::stod(it->second);
+				}
+				catch (...)
+				{
+					return defaultValue;
+				}
+			}
+			return defaultValue;
 		}
 
 		bool ConfigParseUtil::GetBool(const std::string &section,
@@ -216,6 +266,26 @@ namespace IDLog
 			return defaultValue;
 		}
 
+		bool ConfigParseUtil::GetBool(const std::map<std::string, std::string> &params,
+								const std::string &key,
+								bool defaultValue)
+		{
+			auto it = params.find(key);
+			if (it != params.end())
+			{
+				std::string strValue = StringUtil::ToLower(it->second);
+				if (strValue == "true" || strValue == "1" || strValue == "yes" || strValue == "on")
+				{
+					return true;
+				}
+				else if (strValue == "false" || strValue == "0" || strValue == "no" || strValue == "off")
+				{
+					return false;
+				}
+			}
+			return defaultValue;
+		}
+
 		LogLevel ConfigParseUtil::GetLogLevel(const std::string &section,
 										const std::string &key,
 										LogLevel defaultValue) const
@@ -226,6 +296,18 @@ namespace IDLog
 				return defaultValue;
 			}
 			return StringToLevel(strValue);
+		}
+
+		LogLevel ConfigParseUtil::GetLogLevel(const std::map<std::string, std::string> &params,
+										const std::string &key,
+										LogLevel defaultValue)
+		{
+			auto it = params.find(key);
+			if (it != params.end())
+			{
+				return StringToLevel(it->second);
+			}
+			return defaultValue;
 		}
 
 		void ConfigParseUtil::SetString(const std::string &section,

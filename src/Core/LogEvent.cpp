@@ -45,9 +45,7 @@ namespace IDLog
 		std::string threadName;  ///< 线程名称
 
 		/// @brief 构造函数
-		Impl()
-			: level(LogLevel::INFO), loggerName(""), location(), time(), message(""), threadId(""), threadName("") {
-		}
+		Impl() {}
 	};
 
 	LogEvent::LogEvent(LogLevel level, const std::string& loggerName, const std::string& message, const SourceLocation& location)

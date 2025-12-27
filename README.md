@@ -1,94 +1,171 @@
-<!--
- * @Description: 
- * @Author: InverseDark
- * @Date: 2025-12-18 23:51:14
- * @LastEditTime: 2025-12-18 23:51:17
- * @LastEditors: InverseDark
--->
 # InverseDarkLog (IDLog)
 
-项目概述
-----------
-IDLog 是一个轻量、可扩展的 C++ 日志库，提供多级别日志、可插拔的输出器、格式化器与过滤器，适用于多线程场景与多种后端集成需求。
+## 项目概述
+IDLog 是一个高性能、轻量级、可扩展的 C++ 日志库。它专为高并发场景设计，支持同步/异步模式、多级日志、丰富的格式化选项、灵活的过滤器以及基于文件的配置系统。
 
-目标：提供简单易用的日志 API（含宏）、良好的并发性和灵活的扩展能力以适配不同输出后端。
+**核心目标**：在保持简单易用的 API（类 Log4j/Logback）的同时，提供极致的性能表现（异步模式下 QPS 可达 170万+）。
 
-功能特性
---------
-- 日志级别：支持 TRACE / DEBUG / INFO / WARN / ERROR / FATAL / OFF，并提供 LevelToString / StringToLevel 互转。
-- 日志事件：`LogEvent` 包含级别、日志器名、`SourceLocation`（文件/函数/行）、时间戳（含毫秒）、线程ID/名称、消息与 `ToString()` 序列化。
-- 记录器：`Logger` 提供按级别记录方法（`Trace`/`Debug`/`Info`/`Warn`/`Error`/`Fatal`）、格式化接口（`*Fmt`）、延迟消息（lambda）和级别配置。
-- 宏与便捷 API：提供 `IDLOG_*` 系列宏与 `IDLOG_GET_LOGGER` 等快捷使用方式。
-- 输出器（Appender）：抽象 `LogAppender`，包含 `ConsoleAppender`（支持彩色输出开关、可设置 `Formatter`）。
-- 格式化器：`Formatter` 接口与 `PatternFormatter`，支持时间模板与可定制日志格式（如 `%d`、`%p`、`%c`、`%m`）。
-- 过滤器：`Filter` 基类及实现（`LevelFilter`、`LevelRangeFilter`、`LevelThresholdFilter`），支持动态添加/移除以控制输出。
-- Logger 管理：`LoggerManager` 负责命名日志器的创建/查找/移除，并支持父子继承策略。
-- 线程工具与并发：`Utils::ThreadUtil` 支持设置/获取线程名，设计用于并发场景并记录线程元数据。
-- 可扩展性：支持自定义 `Formatter` / `Appender` / `Filter`，便于集成文件、网络或其他后端。
+## 核心特性
 
-快速开始（构建与运行）
-------------------
-- 使用 CMake 构建（Windows / Linux / macOS）：
+### 🚀 高性能
+- **异步日志 (Async Logging)**：基于无锁设计思想（条件通知优化）的异步队列，将 I/O 操作从业务线程剥离。
+- **极致优化**：
+  - **I/O 缓冲**：`FileAppender` 内置 64KB 写缓冲区，大幅减少系统调用。
+  - **时间缓存**：秒级时间格式化缓存，消除高频日志下的 CPU 热点。
+  - **零拷贝思想**：在关键路径上减少内存分配与拷贝。
+- **基准测试**：单线程同步写入 56万+ QPS，异步写入 170万+ QPS（Ryzen 7 环境）。
+
+### 🛠 功能丰富
+- **多级日志**：TRACE / DEBUG / INFO / WARN / ERROR / FATAL。
+- **多种输出器 (Appenders)**：
+  - `ConsoleAppender`：支持彩色输出（自动识别 TTY）。
+  - `FileAppender`：支持多种滚动策略（按大小、按天/小时/分钟滚动）。
+  - `AsyncAppender`：异步包装器，可将任意 Appender 变为异步模式。
+- **灵活配置**：
+  - 支持 `.ini` 配置文件加载，热更友好。
+  - 支持父子 Logger 继承关系（Additivity）。
+- **格式化**：强大的 `PatternFormatter`，支持类似 Log4j 的格式字符串（如 `%d{%H:%M:%S} [%t] %-5p %c - %m%n`）。
+- **过滤器**：支持按级别、范围、阈值过滤日志。
+
+### 📦 易于集成
+- **Header-only 友好**：核心接口简洁，依赖少。
+- **CMake 支持**：标准的 CMake 构建系统，易于引入。
+- **跨平台**：支持 Windows / Linux / macOS。
+
+## 快速开始
+
+### 1. 构建项目
 
 ```powershell
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
 cmake --build . --config Release
 ```
 
-- 运行测试/示例：
+### 2. 运行示例
+
+我们提供了丰富的示例代码，位于 `examples` 目录下：
+
+- **基础用法** (`example_basic`)：展示宏、Logger 对象的基本操作。
+- **配置文件** (`example_config`)：展示如何从 `.ini` 文件加载配置。
+- **异步日志** (`example_async`)：展示如何手动组装异步 Appender。
+- **综合场景** (`example_full`)：模拟真实业务场景（多线程、多模块、异步配置）。
 
 ```powershell
-ctest -C Release --output-on-failure
-# 或直接运行构建生成的示例可执行文件
-.\examples\simple_example.exe
+# 运行综合示例
+.\examples\Release\example_full.exe
 ```
 
-示例用法（简要）
-----------------
-- 获取 logger 并记录：
+## 代码示例
+
+### 基础用法 (使用宏)
 
 ```cpp
-auto logger = IDLOG_GET_LOGGER("MyApp");
-logger->SetLevel(IDLog::LogLevel::INFO);
-logger->Info("应用启动");
-logger->DebugFmt("值: %d", 42);
+#include "IDLog/IDLog.h"
+
+int main() {
+    // 初始化（可选）
+    auto logger = IDLOG_GET_ROOT_LOGGER();
+    logger->SetLevel(IDLog::LogLevel::INFO);
+
+    // 使用宏记录（推荐）
+    IDLOG_INFO("系统启动成功");
+    IDLOG_WARN_FMT("磁盘空间不足: %d%%", 85);
+    
+    // 显式关闭（确保异步日志落盘）
+    IDLOG_SHUTDOWN();
+    return 0;
+}
 ```
 
-- 使用宏：
+### 异步日志配置 (代码方式)
 
 ```cpp
-IDLOG_INFO("处理开始");
-IDLOG_ERROR_FMT("处理失败: %s", errmsg.c_str());
+// 1. 创建文件后端
+auto fileAppender = std::make_shared<IDLog::FileAppender>(
+    "app.log", nullptr, IDLog::FileAppender::RollPolicy::DAILY);
+
+// 2. 创建异步包装器
+auto asyncAppender = std::make_shared<IDLog::AsyncAppender>(
+    fileAppender, 
+    100000, // 队列容量
+    100,    // 批处理大小
+    1000,   // 刷新间隔(ms)
+    IDLog::AsyncAppender::OverflowPolicy::BLOCK // 队列满时阻塞
+);
+asyncAppender->Start();
+
+// 3. 挂载到 Logger
+auto logger = IDLOG_GET_LOGGER("AsyncLogger");
+logger->AddAppender(asyncAppender);
 ```
 
-- 自定义格式化器与控制台输出器：
+### 配置文件示例 (`log_config.ini`)
 
-```cpp
-auto fmt = std::make_shared<IDLog::PatternFormatter>("%d{%Y-%m-%d %H:%M:%S} [%p] %c - %m%n");
-auto appender = std::make_shared<IDLog::ConsoleAppender>();
-appender->SetFormatter(fmt);
-logger->ClearAppenders();
-logger->AddAppender(appender);
+```ini
+[global]
+rootLevel=INFO
+
+[logger.ROOT]
+level=INFO
+appenders=AsyncFile,Console
+
+[logger.Network]
+level=DEBUG
+appenders=AsyncFile
+additivity=false
+
+# 异步文件输出器配置
+[appender.AsyncFile]
+type=async
+queueCapacity=50000
+batchSize=50
+flushIntervalMs=2000
+backendType=file
+backend.formatter=Detailed
+backend.filename=server.log
+backend.rollPolicy=daily
+
+[appender.Console]
+type=console
+formatter=Simple
+useColor=true
+
+# 简单格式化器
+[formatter.Simple]
+type=pattern
+pattern=%d{%H:%M:%S} %-5p %c - %m%n
+
+# 详细格式化器
+[formatter.Detailed]
+type=pattern
+pattern=%d{%Y-%m-%d %H:%M:%S.%ms} [%t] %-5p %c - %m%n
 ```
 
-测试与示例
------------
-- 示例/测试入口：请参阅 `tests/test_basic.cpp` 中的用法示例（级别互转、事件、记录器、宏、格式化器、多线程、彩色输出、过滤器等）。
-- 示例程序：查看 `examples/simple_example.cpp` 了解最小集成方式。
+## 性能基准 (Benchmark)
 
-项目结构（主要文件映射）
------------------------
-- 公共头：`include/IDLog/IDLog.h`
-- Appender：`include/IDLog/Appender/LogAppender.h`、`include/IDLog/Appender/ConsoleAppender.h`（实现在 `src/Appender/`）
-- Core：`include/IDLog/Core/*`（`LogEvent.h`、`Logger.h`、`LoggerManager.h`、`LogLevel.h`、`Macro.h`；实现在 `src/Core/`）
-- Filter：`include/IDLog/Filter/*`（实现在 `src/Filter/`）
-- Formatter：`include/IDLog/Formatter/*`（实现在 `src/Formatter/`）
-- Utils：`include/IDLog/Utils/*`（实现在 `src/Utils/`）
+运行 `tests/test_benchmark` 可在你的机器上进行压测。以下为参考数据（单线程 50万条日志）：
 
-扩展与集成建议
-----------------
-- 接入文件/网络/自定义后端：继承 `LogAppender` 并实现 `Append()`；可复用 `PatternFormatter` 或实现自定义 `Formatter`。
-- 灵活过滤：实现 `Filter` 子类并通过 `Logger::AddFilter` 动态添加。
-- 多线程场景：使用 `Utils::ThreadUtil` 设置线程名以便日志定位。
+| 模式 | 总耗时 | QPS (条/秒) | 说明 |
+| :--- | :--- | :--- | :--- |
+| **同步 (Sync)** | 849 ms | **588928** | 适合低频、关键路径 |
+| **异步 (Async)** | 281 ms | **1,779,359** | 适合高并发、生产环境 |
+
+## 项目结构
+
+- `include/IDLog`
+  - `Core/`: 核心逻辑 (Logger, Event, Manager)
+  - `Appender/`: 输出器实现 (Console, File, Async)
+  - `Formatter/`: 格式化器
+  - `Filter/`: 过滤器
+  - `Utils/`: 工具类 (Thread, Time, String)
+- `src`: 源代码实现
+- `examples`: 使用示例
+- `tests`: 单元测试与基准测试
+
+## 最佳实践
+
+1.  **生产环境首选异步**：对于高吞吐应用，务必使用 `AsyncAppender` 以避免阻塞业务线程。
+2.  **显式关闭**：在 `main` 函数退出前调用 `IDLOG_SHUTDOWN()`，防止日志丢失。
+3.  **合理设置缓冲区**：异步队列不宜过大（占用内存），也不宜过小（容易阻塞）。推荐 5w-10w。
+4.  **使用宏**：`IDLOG_INFO` 等宏会自动捕获文件名和行号，且在日志级别不满足时几乎无开销。

@@ -25,6 +25,7 @@ namespace IDLog
 	{
 		std::string filename;	 ///< 文件名
 		std::ofstream fstream; ///< 文件流
+		std::vector<char> fileBuffer; ///< 文件缓冲区
 		RollPolicy rollPolicy; ///< 滚动策略
 		size_t maxSize;		 ///< 最大文件大小
 		size_t currentFileSize;	 ///< 当前文件大小
@@ -32,7 +33,10 @@ namespace IDLog
 
 		/// @brief 构造函数
 		Impl()
-			: filename(""), rollPolicy(RollPolicy::NONE), maxSize(10 * 1024 * 1024), currentFileSize(0), lastRollTime(0) {
+			: currentFileSize(0), lastRollTime(0)
+		{
+			// 初始化文件缓冲区为64KB
+			fileBuffer.resize(64 * 1024);
 		}
 	};
 
@@ -74,23 +78,23 @@ namespace IDLog
 			return;
 		}
 
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		// 检查是否需要滚动
-		if (ShouldRoll(event))
-		{
-			RollFile(event);
-		}
-
 		// 格式化日志消息
 		std::string formattedMessage;
-		if (auto formatter = GetFormatterNoLock())
+		if (auto formatter = GetFormatter())
 		{
 			formattedMessage = formatter->Format(event);
 		}
 		else
 		{
 			formattedMessage = event->GetLogMessage();
+		}
+
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		// 检查是否需要滚动
+		if (ShouldRoll(event))
+		{
+			RollFile(event);
 		}
 
 		// 确保文件已打开
@@ -102,9 +106,6 @@ namespace IDLog
 		// 写入文件
 		m_pImpl->fstream << formattedMessage;
 		m_pImpl->currentFileSize += formattedMessage.size();
-
-		// 刷新缓冲区
-		m_pImpl->fstream.flush();
 	}
 
 	std::string FileAppender::GetName() const
@@ -380,6 +381,9 @@ namespace IDLog
 				}
 			}
 		}
+
+		// 设置缓冲区
+		m_pImpl->fstream.rdbuf()->pubsetbuf(m_pImpl->fileBuffer.data(), m_pImpl->fileBuffer.size());
 
 		// 打开文件
 		m_pImpl->fstream.open(m_pImpl->filename, std::ios::app | std::ios::out);

@@ -6,6 +6,7 @@
  * @LastEditors: InverseDark
  */
 #include "IDLog/Core/Logger.h"
+#include "IDLog/Core/Statistics.h"
 #include "IDLog/Appender/ConsoleAppender.h"
 
 #include <vector>
@@ -33,7 +34,6 @@ namespace IDLog
 	{
 		m_pImpl->name = name;
 		m_pImpl->level.store(level);
-		m_pImpl->statisticsEnabled = false;
 
 		// 默认添加一个控制台输出器
 		AppenderPtr consoleAppender = std::make_shared<ConsoleAppender>();
@@ -149,7 +149,8 @@ namespace IDLog
 				endTime - startTime)
 				.count();
 
-			// TODO: 统计逻辑（如更新计数器、记录延迟等）
+			StatisticsManager::GetInstance().RecordLog(
+				GetName(), level, message.size(), static_cast<uint64_t>(waitTime));
 		}
 	}
 

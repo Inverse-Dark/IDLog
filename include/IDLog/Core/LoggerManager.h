@@ -68,6 +68,9 @@ namespace IDLog
 		/// @brief 清空所有日志器
 		void Clear();
 
+		/// @brief 关闭日志管理器，释放资源
+		void Shutdown();
+
 	private:
 		/// @brief 构造函数
 		LoggerManager();
@@ -87,6 +90,8 @@ namespace IDLog
 #define IDLOG_GET_LOGGER(name) IDLog::LoggerManager::GetInstance().GetLogger(name)
 /// @brief 便捷宏：获取根Logger
 #define IDLOG_GET_ROOT_LOGGER() IDLog::LoggerManager::GetInstance().GetRootLogger()
+/// @brief 便捷宏：关闭日志管理器
+#define IDLOG_SHUTDOWN() IDLog::LoggerManager::GetInstance().Shutdown()
 
 /// @brief 便捷宏：快速记录TRACE级别的日志（使用根日志器）
 #define IDLOG_TRACE(msg) IDLOG_GET_ROOT_LOGGER()->Trace(msg, IDLog::SourceLocation(__FILE__, __FUNCTION__, __LINE__))
@@ -113,6 +118,32 @@ namespace IDLog
 #define IDLOG_ERROR_FMT(format, ...) IDLOG_GET_ROOT_LOGGER()->ErrorFmt(format, ##__VA_ARGS__)
 /// @brief 便捷宏：快速记录格式化的FATAL级别日志（使用根日志器）
 #define IDLOG_FATAL_FMT(format, ...) IDLOG_GET_ROOT_LOGGER()->FatalFmt(format, ##__VA_ARGS__)
+
+/// @brief 便捷宏：快速记录TRACE级别的日志（指定日志器名称）
+#define IDLOG_LOGGER_TRACE(loggerName, msg) IDLOG_GET_LOGGER(loggerName)->Trace(msg, IDLog::SourceLocation(__FILE__, __FUNCTION__, __LINE__))
+/// @brief 便捷宏：快速记录DEBUG级别的日志（指定日志器名称）
+#define IDLOG_LOGGER_DEBUG(loggerName, msg) IDLOG_GET_LOGGER(loggerName)->Debug(msg, IDLog::SourceLocation(__FILE__, __FUNCTION__, __LINE__))
+/// @brief 便捷宏：快速记录INFO级别的日志（指定日志器名称）
+#define IDLOG_LOGGER_INFO(loggerName, msg) IDLOG_GET_LOGGER(loggerName)->Info(msg, IDLog::SourceLocation(__FILE__, __FUNCTION__, __LINE__))
+/// @brief 便捷宏：快速记录WARN级别的日志（指定日志器名称）
+#define IDLOG_LOGGER_WARN(loggerName, msg) IDLOG_GET_LOGGER(loggerName)->Warn(msg, IDLog::SourceLocation(__FILE__, __FUNCTION__, __LINE__))
+/// @brief 便捷宏：快速记录ERROR级别的日志（指定日志器名称）
+#define IDLOG_LOGGER_ERROR(loggerName, msg) IDLOG_GET_LOGGER(loggerName)->Error(msg, IDLog::SourceLocation(__FILE__, __FUNCTION__, __LINE__))
+/// @brief 便捷宏：快速记录FATAL级别的日志（指定日志器名称）
+#define IDLOG_LOGGER_FATAL(loggerName, msg) IDLOG_GET_LOGGER(loggerName)->Fatal(msg, IDLog::SourceLocation(__FILE__, __FUNCTION__, __LINE__))
+
+/// @brief 便捷宏：快速记录格式化的TRACE级别日志（指定日志器名称）
+#define IDLOG_LOGGER_TRACE_FMT(loggerName, format, ...) IDLOG_GET_LOGGER(loggerName)->TraceFmt(format, ##__VA_ARGS__)
+/// @brief 便捷宏：快速记录格式化的DEBUG级别日志（指定日志器名称）
+#define IDLOG_LOGGER_DEBUG_FMT(loggerName, format, ...) IDLOG_GET_LOGGER(loggerName)->DebugFmt(format, ##__VA_ARGS__)
+/// @brief 便捷宏：快速记录格式化的INFO级别日志（指定日志器名称）
+#define IDLOG_LOGGER_INFO_FMT(loggerName, format, ...) IDLOG_GET_LOGGER(loggerName)->InfoFmt(format, ##__VA_ARGS__)
+/// @brief 便捷宏：快速记录格式化的WARN级别日志（指定日志器名称）
+#define IDLOG_LOGGER_WARN_FMT(loggerName, format, ...) IDLOG_GET_LOGGER(loggerName)->WarnFmt(format, ##__VA_ARGS__)
+/// @brief 便捷宏：快速记录格式化的ERROR级别日志（指定日志器名称）
+#define IDLOG_LOGGER_ERROR_FMT(loggerName, format, ...) IDLOG_GET_LOGGER(loggerName)->ErrorFmt(format, ##__VA_ARGS__)
+/// @brief 便捷宏：快速记录格式化的FATAL级别日志（指定日志器名称）
+#define IDLOG_LOGGER_FATAL_FMT(loggerName, format, ...) IDLOG_GET_LOGGER(loggerName)->FatalFmt(format, ##__VA_ARGS__)
 
 } // namespace IDLog
 

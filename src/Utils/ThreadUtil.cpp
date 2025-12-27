@@ -24,40 +24,60 @@ namespace IDLog
 {
 	namespace Utils
 	{
+        static thread_local std::string t_threadIdStr = "";	///< 线程ID字符串缓存
+        static thread_local uint64_t t_threadIdNum = 0;	///< 线程ID数字缓存
+        static thread_local std::string t_threadName = "";	///< 线程名称缓存
+
 		std::string ThreadUtil::GetThreadId()
 		{
-			std::stringstream ss;
-			ss << GetThreadIdNum();
-			return ss.str();
+            if (t_threadIdStr.empty())
+            {
+                std::stringstream ss;
+                ss << GetThreadIdNum();
+                t_threadIdStr = ss.str();
+            }
+            return t_threadIdStr;
 		}
 		uint64_t ThreadUtil::GetThreadIdNum()
 		{
+            if (t_threadIdNum == 0)
+            {
 #ifdef IDLOG_PLATFORM_WINDOWS
-			return static_cast<uint64_t>(GetCurrentThreadId());
+                t_threadIdNum = static_cast<uint64_t>(GetCurrentThreadId());
 #else
-			return static_cast<uint64_t>(syscall(SYS_gettid));
+                t_threadIdNum = static_cast<uint64_t>(syscall(SYS_gettid));
 #endif
+            }
+            return t_threadIdNum;
 		}
 
 		std::string ThreadUtil::GetThreadName()
 		{
+            // 如果缓存为空，才去查询系统
+            if (t_threadName.empty())
+            {
 #ifdef IDLOG_PLATFORM_WINDOWS
-			PWSTR threadName[MAX_PATH];
-			GetThreadDescription(GetCurrentThread(), threadName);
-
-			// 宽字符转多字节
-			char mbThreadName[MAX_PATH];
-			WideCharToMultiByte(CP_UTF8, 0, *threadName, -1, mbThreadName, MAX_PATH, NULL, NULL);
-			return std::string(mbThreadName);
+                PWSTR threadName;
+                // 注意：GetThreadDescription 需要释放内存吗？通常不需要，但这里我们只调一次
+                if (SUCCEEDED(GetThreadDescription(GetCurrentThread(), &threadName)))
+                {
+                    char mbThreadName[256];
+                    WideCharToMultiByte(CP_UTF8, 0, threadName, -1, mbThreadName, 256, NULL, NULL);
+                    t_threadName = mbThreadName;
+                    LocalFree(threadName); // 记得释放！
+                }
 #else
-			char threadName[16] = {0};
-			pthread_getname_np(pthread_self(), threadName, sizeof(threadName));
-			return std::string(threadName);
+                char threadName[16] = {0};
+                pthread_getname_np(pthread_self(), threadName, sizeof(threadName));
+                t_threadName = threadName;
 #endif
+            }
+            return t_threadName;
 		}
 
 		void ThreadUtil::SetThreadName(const std::string &name)
 		{
+			t_threadName = name; // 更新缓存
 #ifdef IDLOG_PLATFORM_WINDOWS
 			// Windows需要宽字符
 			wchar_t wname[256];

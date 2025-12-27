@@ -6,6 +6,7 @@
  * @LastEditors: InverseDark
  */
 #include "IDLog/Core/Configuration.h"
+#include "IDLog/Core/Statistics.h"
 #include "IDLog/Core/LoggerManager.h"
 #include "IDLog/Utils/ConfigParseUtil.h"
 
@@ -524,6 +525,11 @@ namespace IDLog
 		std::map<std::string, LoggerManager::LoggerPtr> oldLoggers; // 备份旧日志器指针
 		std::vector<std::string> newCreatedLoggers;					// 新创建的日志器名称列表
 		bool allSuccess = true;
+
+		// 设置统计启用
+		StatisticsManager::GetInstance().EnableStatistics(m_pImpl->options.global.enableStatistics);
+		// 设置统计间隔
+		StatisticsManager::GetInstance().SetStatisticsInterval(m_pImpl->options.global.statisticsInterval);
 
 		// 设置根日志级别
 		loggerMgr.SetRootLevel(m_pImpl->options.global.rootLevel);
