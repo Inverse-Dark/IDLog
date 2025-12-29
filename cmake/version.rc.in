@@ -1,0 +1,44 @@
+#include <windows.h>
+
+#define VER_FILEVERSION             @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+#define VER_FILEVERSION_STR         "@PROJECT_VERSION@\0"
+
+#define VER_PRODUCTVERSION          @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+#define VER_PRODUCTVERSION_STR      "@PROJECT_VERSION@\0"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEFLAGSMASK   0x3fL
+#ifdef _DEBUG
+FILEFLAGS       VS_FF_DEBUG
+#else
+FILEFLAGS       0x0L
+#endif
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_DLL
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName",      "InverseDark\0"
+            VALUE "FileDescription",  "IDLog C++ Log Library\0"
+            VALUE "FileVersion",      VER_FILEVERSION_STR
+            VALUE "InternalName",     "@LIBRARY_NAME@\0"
+            VALUE "LegalCopyright",   "Copyright (c) 2025 InverseDark\0"
+#ifdef _DEBUG
+            VALUE "OriginalFilename", "@LIBRARY_NAME@@CMAKE_DEBUG_POSTFIX@.dll\0"
+#else
+            VALUE "OriginalFilename", "@LIBRARY_NAME@.dll\0"
+#endif
+            VALUE "ProductName",      "IDLog\0"
+            VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END

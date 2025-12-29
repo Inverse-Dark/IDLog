@@ -13,6 +13,18 @@ file(GLOB SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/Utils/*.cpp
 )
 
+if(WIN32)
+    # 生成 version.rc 文件
+    # @LIBRARY_NAME@ 和 @CMAKE_DEBUG_POSTFIX@ 会在这里被替换
+    configure_file(
+        ${CMAKE_SOURCE_DIR}/cmake/version.rc.in
+        ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+        @ONLY
+    )
+    # 将生成的资源文件添加到源列表中
+    list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+endif()
+
 # 根据选项构建静态或动态库
 if(IDLOG_BUILD_SHARED)
 	# 只构建动态库
@@ -52,14 +64,6 @@ endif()
 # 目标级别：导出版本宏并启用 C++ 标准特性与 PIC
 # 这些在库创建后统一设置
 if(TARGET ${LIBRARY_NAME})
-	# 版本宏（目标级）
-	target_compile_definitions(${LIBRARY_NAME} PRIVATE
-		IDLOG_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
-		IDLOG_VERSION_MINOR=${PROJECT_VERSION_MINOR}
-		IDLOG_VERSION_PATCH=${PROJECT_VERSION_PATCH}
-		"IDLOG_VERSION_STRING=\"${PROJECT_VERSION}\""
-	)
-
 	# 要求 C++ 标准（现代 CMake 风格）
 	target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_17)
 
