@@ -2,7 +2,7 @@
  * @Description: 日志级别头文件
  * @Author: InverseDark
  * @Date: 2025-12-18 18:43:00
- * @LastEditTime: 2025-12-18 18:44:08
+ * @LastEditTime: 2025-12-29 23:34:16
  * @LastEditors: InverseDark
  */
 #ifndef IDLOG_CORE_LOGLEVEL_H
@@ -96,6 +96,13 @@ namespace IDLog
 	inline bool ShouldLog(LogLevel currentLevel, LogLevel msgLevel)
 	{
 		return static_cast<int>(msgLevel) >= static_cast<int>(currentLevel) && currentLevel != LogLevel::OFF;
+	}
+
+	/// @brief 获取IDLog库的版本字符串
+	/// @return 版本字符串，格式为"MAJOR.MINOR.PATCH"
+	inline const char* Version()
+	{
+		return IDLOG_VERSION_STRING;
 	}
 
 } // namespace IDLog

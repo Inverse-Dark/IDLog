@@ -1,7 +1,7 @@
 # 设置最低的CMake版本要求
 cmake_minimum_required(VERSION 3.10)
 # 设置项目名称和版本号
-project(IDLog VERSION 1.2.2 LANGUAGES C CXX)
+project(IDLog VERSION 1.2.3 LANGUAGES C CXX)
 
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)	# 使用C++17标准
@@ -19,12 +19,6 @@ if(WIN32)
 else()
     set(CMAKE_DEBUG_POSTFIX "")  # Unix/Linux 通常不加后缀
 endif()
-
-# 添加版本宏定义
-add_definitions(-DIDLOG_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
-add_definitions(-DIDLOG_VERSION_MINOR=${PROJECT_VERSION_MINOR})
-add_definitions(-DIDLOG_VERSION_PATCH=${PROJECT_VERSION_PATCH})
-add_definitions(-DIDLOG_VERSION_STRING="${PROJECT_VERSION}")
 
 # 添加平台宏定义
 if(WIN32)

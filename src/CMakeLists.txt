@@ -64,10 +64,18 @@ endif()
 # 目标级别：导出版本宏并启用 C++ 标准特性与 PIC
 # 这些在库创建后统一设置
 if(TARGET ${LIBRARY_NAME})
-	# 要求 C++ 标准（现代 CMake 风格）
+	# 要求 C++ 标准
 	target_compile_features(${LIBRARY_NAME} PUBLIC cxx_std_17)
 
-	# 生成位置无关代码（适用于共享库和某些静态库场景）
+	# 导出版本宏定义
+	target_compile_definitions(${LIBRARY_NAME} PUBLIC
+        IDLOG_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+        IDLOG_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+        IDLOG_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+        "IDLOG_VERSION_STRING=\"${PROJECT_VERSION}\""
+    )
+
+	# 生成位置无关代码
 	set_target_properties(${LIBRARY_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 	# 包含目录
@@ -81,8 +89,6 @@ if(TARGET ${LIBRARY_NAME})
 
 	# 链接可移植的线程库
 	target_link_libraries(${LIBRARY_NAME} PUBLIC Threads::Threads)
-
-	# 其余公共设置保留（例如其他系统库可在此处添加）
 endif()
 
 # 使用生成器表达式安装不同配置的库
