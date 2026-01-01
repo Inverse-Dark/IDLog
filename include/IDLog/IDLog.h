@@ -2,13 +2,15 @@
  * @Description: IDLog 日志库主头文件
  * @Author: InverseDark
  * @Date: 2025-12-18 23:23:17
- * @LastEditTime: 2025-12-25 22:08:49
+ * @LastEditTime: 2026-01-01 15:49:23
  * @LastEditors: InverseDark
  */
 #ifndef IDLOG_IDLOG_H
 #define IDLOG_IDLOG_H
 
 // 包含核心组件头文件
+#include "IDLog/Core/Macro.h"
+#include "IDLog/Core/Version.h"
 #include "IDLog/Core/LogLevel.h"
 #include "IDLog/Core/LogEvent.h"
 #include "IDLog/Core/Logger.h"
