@@ -1,7 +1,7 @@
 # 设置最低的CMake版本要求
 cmake_minimum_required(VERSION 3.10)
 # 设置项目名称和版本号
-project(IDLog VERSION 1.2.4 LANGUAGES C CXX)
+project(IDLog VERSION 1.2.5 LANGUAGES C CXX)
 
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)	# 使用C++17标准

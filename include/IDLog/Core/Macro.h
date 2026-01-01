@@ -8,6 +8,18 @@
 #ifndef IDLOG_CORE_MACRO_H
 #define IDLOG_CORE_MACRO_H
 
+// 平台检测
+#if !defined(IDLOG_PLATFORM_WINDOWS) && !defined(IDLOG_PLATFORM_LINUX) && !defined(IDLOG_PLATFORM_MACOS)
+#if defined(_WIN32)
+#define IDLOG_PLATFORM_WINDOWS
+#elif defined(__linux__)
+#define IDLOG_PLATFORM_LINUX
+#elif defined(__APPLE__)
+#define IDLOG_PLATFORM_MACOS
+#endif
+#endif // !IDLOG_PLATFORM_WINDOWS && !IDLOG_PLATFORM_LINUX && !IDLOG_PLATFORM_MACOS
+
+// 动态库导出/导入定义
 #if defined(IDLOG_PLATFORM_WINDOWS)
 #if defined(IDLOG_BUILD_SHARED)
 #define IDLOG_API __declspec(dllexport)
@@ -24,10 +36,10 @@
 #define IDLOG_API
 #endif // IDLOG_PLATFORM_WINDOWS
 
-#if (defined(IDLOG_BUILD_STATIC) && !defined(IDLOG_BUILD_SHARED)) \
-	|| defined(IDLOG_STATIC_LIBRARY)
+// 静态库构建时取消导出/导入定义
+#if (defined(IDLOG_BUILD_STATIC) && !defined(IDLOG_BUILD_SHARED)) || defined(IDLOG_STATIC_LIBRARY)
 #undef IDLOG_API
 #define IDLOG_API
-#endif // IDLOG_BUILD_SHARED
+#endif // (defined(IDLOG_BUILD_STATIC) && !defined(IDLOG_BUILD_SHARED)) || defined(IDLOG_STATIC_LIBRARY)
 
 #endif // !IDLOG_CORE_MACRO_H

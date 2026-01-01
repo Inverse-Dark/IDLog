@@ -72,16 +72,7 @@ if(TARGET ${LIBRARY_NAME})
         IDLOG_VERSION_PATCH=${PROJECT_VERSION_PATCH}
         "IDLOG_VERSION_STRING=\"${PROJECT_VERSION}\""
     )
-
-	# 添加平台宏定义
-	if(WIN32)
-		target_compile_definitions(${LIBRARY_NAME} PRIVATE IDLOG_PLATFORM_WINDOWS)
-	elseif(UNIX)
-		target_compile_definitions(${LIBRARY_NAME} PRIVATE IDLOG_PLATFORM_UNIX)
-	elseif(APPLE)
-		target_compile_definitions(${LIBRARY_NAME} PRIVATE IDLOG_PLATFORM_APPLE)
-	endif()
-
+	
 	# 生成位置无关代码
 	set_target_properties(${LIBRARY_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
